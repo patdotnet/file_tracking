@@ -1,13 +1,13 @@
 import os
 import sys
 import sqlite3
+import hashlib
 
-# From milestone 1
+# From milestones 1 and 2
 def getbasefile():
     """Name of the SQLite DB file"""
     return os.path.splitext(os.path.basename(__file__))[0]
 
-# From milestone 1
 def connectdb():
     """Connect to the SQLite DB"""
     try:
@@ -18,7 +18,6 @@ def connectdb():
         conn = None
     return conn
 
-# From milestone 1
 def corecursor(conn, query, args):
     """Opens a SQLite DB cursor"""
     result = False
@@ -38,7 +37,6 @@ def corecursor(conn, query, args):
             cursor.close()
     return result
 
-# From milestone 1
 def tableexists(table):
     """Checks if a SQLite DB Table exists"""
     result = False
@@ -181,3 +179,35 @@ def md5indb(fname):
         if conn != None:
             conn.close()
     return items
+
+# From milestone 3
+def haschanged(fname, md5):
+    """Checks if a file has changed"""
+    result = False
+    oldmd5 = md5indb(fname)
+    numits = len(oldmd5)
+    if numits > 0:
+        if oldmd5[0] != md5:
+            result = True
+            updatehashtable(fname, md5)
+    else:
+        setuphashtable(fname, md5)
+    return result
+
+def getfileext(fname):
+    """Get the file name extension"""
+    return os.path.splitext(fname)[1]
+
+def getmoddate(fname):
+    """Get file modified date"""
+    try:
+        mtime = os.path.getmtime(fname)
+    except OSError as emsg:
+        print(str(emsg))
+        mtime = 0
+    return mtime
+
+
+def md5short(fname):
+    """Get md5 file hash tag"""
+    return hashlib.md5(str(fname + '|' + str(getmoddate(fname))).encode('utf-8')).hexdigest()
